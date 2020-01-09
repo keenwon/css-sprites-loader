@@ -1,43 +1,49 @@
+.div {
+  margin: 40px;
+  border: 2px solid #666;
+}
+
 .div1 {
-  width: 128px;
+  width: 192px;
   height: 128px;
 }
 
 .div1 .image {
-  width: 128px;
+  width: 192px;
   height: 128px;
 }
 
 .div1 .image {
-  background-image: url('./image1.png');
+  background-image: url('./image1.png?__sprite');
 }
 
 .div2 {
-  width: 64px;
+  width: 96px;
   height: 64px;
 }
 
 .div2 .image {
-  width: 64px;
+  width: 96px;
   height: 64px;
-  background-image: url('./image2.png');
+  background-image: url('./image2.png?__sprite');
 }
 
-.icon3 {
-  width: 16px;
-  height: 16px;
-  background-image: url('./image3.png');
+.div3 {
+  width: 48px;
+  height: 32px;
+  background-image: url('./image3.png?__sprite');
 }
 
-.icon4 {
-  width: 64px;
-  height: 64px;
+.div4 {
+  width: 48px;
+  height: 32px;
   background: url('./image4.png');
   background-repeat: no-repeat;
 }
 
-.icon5 {
-  width: 64px;
-  height: 64px;
+.div5 {
+  width: 72px;
+  height: 48px;
   background: url('./image5.png') no-repeat;
 }
+

@@ -2,8 +2,9 @@ const path = require('path')
 const webpack = require('webpack')
 // const Memoryfs = require('memory-fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
-export default () => {
+module.exports = () => {
   const compiler = webpack({
     context: __dirname,
     entry: './files/entry.js',
@@ -16,6 +17,9 @@ export default () => {
     plugins: [
       new MiniCssExtractPlugin({
         filename: `style.css`
+      }),
+      new HtmlWebpackPlugin({
+        template: './files/index.ejs'
       })
     ],
     module: {
@@ -32,10 +36,7 @@ export default () => {
           test: /\.(png|jpg|gif)$/,
           use: [
             {
-              loader: 'url-loader',
-              options: {
-                limit: 8192
-              }
+              loader: 'file-loader'
             }
           ]
         }
