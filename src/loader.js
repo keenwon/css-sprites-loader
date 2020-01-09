@@ -6,7 +6,7 @@ const css = require('css')
 const Spritesmith = require('spritesmith')
 const loaderUtils = require('loader-utils')
 
-const URL_REG = /url\(['"]?(.+\.(png|jpg|jpeg|gif))(.*)['"]?\)/i
+const URL_REG = /url\(['"]?(.+?\.(png|jpg|jpeg|gif))(.*)['"]?\)/i
 
 /**
  * 从 ast 中提取 image url
@@ -43,11 +43,23 @@ function getImageRulsFromAst (ast, context) {
 }
 
 /**
- * 百分比转换
+ * background-position 转换
  */
 
-function toPercent (number, total) {
-  return `${(number / total * 100).toFixed(4)}%`
+function getPosition (num, item, total) {
+  if (!num) {
+    return '0%'
+  }
+
+  return `${(-num / (item - total) * 100).toFixed(4)}%`
+}
+
+/**
+ * background-size 转换
+ */
+
+function getSize (item, total) {
+  return `${(total / item * 100).toFixed(4)}%`
 }
 
 /**
@@ -117,18 +129,25 @@ function loader (content, map, meta) {
     const { width, height } = result.properties
 
     imageRules.forEach(({ url, declaration, rule }) => {
-      const { x, y } = result.coordinates[url]
-
-      const percentX = toPercent(x, width)
-      const percentY = toPercent(y, height)
+      const { x, y, width: imageWidth, height: imageHeight } = result.coordinates[url]
 
       declaration.value = declaration.value.replace(/url\(.+?\)/i, `url(~.sprites/${spriteFileName})`)
+
+      const positionX = getPosition(x, imageWidth, width)
+      const positionY = getPosition(y, imageHeight, height)
+      const sizeX = getSize(imageWidth, width)
+      const sizeY = getSize(imageHeight, height)
 
       const newRules = [
         {
           type: 'declaration',
           property: 'background-position',
-          value: `${percentX} ${percentY}`
+          value: `${positionX} ${positionY}`
+        },
+        {
+          type: 'declaration',
+          property: 'background-size',
+          value: `${sizeX} ${sizeY}`
         }
       ]
 
@@ -136,8 +155,6 @@ function loader (content, map, meta) {
     })
 
     const newContent = css.stringify(ast)
-
-    console.log(newContent)
 
     callback(null, newContent, map, meta)
   }
