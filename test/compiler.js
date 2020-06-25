@@ -1,6 +1,5 @@
 const path = require('path')
 const webpack = require('webpack')
-// const Memoryfs = require('memory-fs')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
@@ -16,7 +15,7 @@ module.exports = () => {
     devtool: 'none',
     plugins: [
       new MiniCssExtractPlugin({
-        filename: `style.css`
+        filename: 'style.css'
       }),
       new HtmlWebpackPlugin({
         template: './files/index.ejs'
@@ -43,8 +42,6 @@ module.exports = () => {
       ]
     }
   })
-
-  // compiler.outputFileSystem = new Memoryfs()
 
   return new Promise((resolve, reject) => {
     compiler.run((err, stats) => {

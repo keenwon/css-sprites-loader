@@ -1,5 +1,6 @@
 'use strict'
 
+const debug = require('debug')('css-sprites-loader')
 const fs = require('fs-extra')
 const path = require('path')
 const css = require('css')
@@ -73,6 +74,10 @@ function getTmpDir () {
 
   fs.ensureDirSync(tmpDir)
 
+  debug(`webpackPath: ${webpackPath}`)
+  debug(`nodeModulesDir: ${nodeModulesDir}`)
+  debug(`tmpDir: ${tmpDir}`)
+
   return tmpDir
 }
 
@@ -91,10 +96,14 @@ function emitFile (image, name = 'sprite.[contenthash:6].png') {
 
   fs.writeFileSync(absolutePath, image)
 
+  debug(`sprite file absolute path: ${absolutePath}`)
+
   return spriteFileName
 }
 
 function loader (content, map, meta) {
+  debug('run...')
+
   const ctx = this
   const callback = ctx.async()
   const context = ctx.context
@@ -103,7 +112,12 @@ function loader (content, map, meta) {
   const imageRules = getImageRulsFromAst(ast, context)
   const imageUrls = imageRules.map(item => item.url)
 
+  debug('webpack ast: %j', ast)
+  debug('imageRules: %j', imageRules)
+
   if (!imageUrls.length) {
+    debug('no image, exit')
+
     callback(null, content, map, meta)
     return
   }
@@ -131,6 +145,7 @@ function loader (content, map, meta) {
     imageRules.forEach(({ url, declaration, rule }) => {
       const { x, y, width: imageWidth, height: imageHeight } = result.coordinates[url]
 
+      // url 替换为 ~.sprites（node_modules 下的临时目录），css-loader 等会处理好
       declaration.value = declaration.value.replace(/url\(.+?\)/i, `url(~.sprites/${spriteFileName})`)
 
       const positionX = getPosition(x, imageWidth, width)
@@ -150,6 +165,8 @@ function loader (content, map, meta) {
           value: `${sizeX} ${sizeY}`
         }
       ]
+
+      debug(`new rules ${url}: %O`, newRules)
 
       rule.declarations.push(...newRules)
     })
