@@ -1,5 +1,4 @@
-'use strict'
-
+/* eslint-disable valid-jsdoc */
 const debug = require('debug')('css-sprites-loader')
 const fs = require('fs-extra')
 const path = require('path')
@@ -10,14 +9,51 @@ const loaderUtils = require('loader-utils')
 const URL_REG = /url\(['"]?(.+?\.(png|jpg|jpeg|gif))(.*)['"]?\)/i
 
 /**
+ *
+ *  是否是网络图片
+ */
+function isNetworkImg (value) {
+  if (!value || typeof value !== 'string') {
+    return false
+  }
+  return /^(\/\/|http|https).+?/.test(value)
+}
+
+/**
+ *
+ * 是否是小图片
+ */
+function isSmallImg ({
+  url,
+  limit
+}) {
+  let isShouldSprite = false
+  try {
+    const status = fs.lstatSync(url)
+    isShouldSprite = status.size <= limit
+  } catch (error) {
+    console.log(error)
+  }
+  return isShouldSprite
+}
+
+/**
  * 从 ast 中提取 image url
  */
 
-function getImageRulsFromAst (ast, context) {
+function getImageRulsFromAst (ast, context, options) {
   const rules = []
+  const {
+    filter = 'query',
+    limit = 8192,
+    params = '__sprite'
+  } = options
 
-  ast.stylesheet.rules.forEach(rule => {
-    rule.declarations.forEach(declaration => {
+  ast.stylesheet.rules.forEach((rule) => {
+    if (!rule.declarations) {
+      return
+    }
+    rule.declarations.forEach((declaration) => {
       const { property, value } = declaration
 
       if (property !== 'background' && property !== 'background-image') {
@@ -31,6 +67,23 @@ function getImageRulsFromAst (ast, context) {
       }
 
       const url = path.join(context, matched[1])
+
+      //  网络图片不处理
+      if (isNetworkImg(matched && matched[1])) {
+        return
+      }
+
+      if (filter === 'query') {
+        if (value.indexOf(params) <= -1) {
+          return
+        }
+      }
+
+      if (!isSmallImg({ url, limit })) {
+        return
+      }
+
+      debug(`css sprite loader: ${url}`)
 
       rules.push({
         url,
@@ -108,8 +161,16 @@ function loader (content, map, meta) {
   const callback = ctx.async()
   const context = ctx.context
 
+  const options = loaderUtils.getOptions(ctx)
+
   const ast = css.parse(content)
-  const imageRules = getImageRulsFromAst(ast, context)
+  if (!ast.stylesheet.rules) {
+    debug('no rules, exit')
+
+    callback(null, content, map, meta)
+    return
+  }
+  const imageRules = getImageRulsFromAst(ast, context, options)
   const imageUrls = imageRules.map(item => item.url)
 
   debug('webpack ast: %j', ast)
@@ -143,10 +204,13 @@ function loader (content, map, meta) {
     const { width, height } = result.properties
 
     imageRules.forEach(({ url, declaration, rule }) => {
-      const { x, y, width: imageWidth, height: imageHeight } = result.coordinates[url]
+      const {
+        x, y, width: imageWidth, height: imageHeight
+      } = result.coordinates[url]
 
       // url 替换为 ~.sprites（node_modules 下的临时目录），css-loader 等会处理好
-      declaration.value = declaration.value.replace(/url\(.+?\)/i, `url(~.sprites/${spriteFileName})`)
+      // eslint-disable-next-line
+            declaration.value = declaration.value.replace(/url\(.+?\)/i, `url(~.sprites/${spriteFileName})`);
 
       const positionX = getPosition(x, imageWidth, width)
       const positionY = getPosition(y, imageHeight, height)
@@ -172,8 +236,7 @@ function loader (content, map, meta) {
     })
 
     const newContent = css.stringify(ast)
-
-    callback(null, newContent, map, meta)
+    callback(null, newContent, map, null)
   }
 
   Spritesmith.run({
