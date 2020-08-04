@@ -1,7 +1,6 @@
 const path = require('path')
 const webpack = require('webpack')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = () => {
   const compiler = webpack({
@@ -15,10 +14,7 @@ module.exports = () => {
     devtool: 'none',
     plugins: [
       new MiniCssExtractPlugin({
-        filename: 'style.css'
-      }),
-      new HtmlWebpackPlugin({
-        template: './files/index.ejs'
+        filename: '[name].css'
       })
     ],
     module: {

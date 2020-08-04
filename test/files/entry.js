@@ -1,3 +1,8 @@
-import './style.css'
+/* eslint-disable */
 
-console.log('')
+(() => {
+  import('./page1/page1.js')
+  import('./page2/page2.js')
+})();
+
+console.log(entry)
