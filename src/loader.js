@@ -1,4 +1,3 @@
-/* eslint-disable valid-jsdoc */
 const debug = require('debug')('css-sprites-loader')
 const fs = require('fs-extra')
 const path = require('path')
@@ -9,31 +8,31 @@ const loaderUtils = require('loader-utils')
 const URL_REG = /url\(['"]?(.+?\.(png|jpg|jpeg|gif))(.*)['"]?\)/i
 
 /**
- *
  *  是否是网络图片
  */
+
 function isNetworkImg (value) {
   if (!value || typeof value !== 'string') {
     return false
   }
+
   return /^(\/\/|http|https).+?/.test(value)
 }
 
 /**
- *
  * 是否是小图片
  */
-function isSmallImg ({
-  url,
-  limit
-}) {
+
+function isSmallImg ({ url, limit }) {
   let isShouldSprite = false
+
   try {
     const status = fs.lstatSync(url)
     isShouldSprite = status.size <= limit
   } catch (error) {
     console.log(error)
   }
+
   return isShouldSprite
 }
 
@@ -53,6 +52,7 @@ function getImageRulsFromAst (ast, context, options) {
     if (!rule.declarations) {
       return
     }
+
     rule.declarations.forEach((declaration) => {
       const { property, value } = declaration
 
@@ -73,10 +73,8 @@ function getImageRulsFromAst (ast, context, options) {
         return
       }
 
-      if (filter === 'query') {
-        if (value.indexOf(params) <= -1) {
-          return
-        }
+      if (filter === 'query' && value.indexOf(params) <= -1) {
+        return
       }
 
       if (!isSmallImg({ url, limit })) {
@@ -164,12 +162,14 @@ function loader (content, map, meta) {
   const options = loaderUtils.getOptions(ctx)
 
   const ast = css.parse(content)
+
   if (!ast.stylesheet.rules) {
     debug('no rules, exit')
 
     callback(null, content, map, meta)
     return
   }
+
   const imageRules = getImageRulsFromAst(ast, context, options)
   const imageUrls = imageRules.map(item => item.url)
 
@@ -210,7 +210,7 @@ function loader (content, map, meta) {
 
       // url 替换为 ~.sprites（node_modules 下的临时目录），css-loader 等会处理好
       // eslint-disable-next-line
-            declaration.value = declaration.value.replace(/url\(.+?\)/i, `url(~.sprites/${spriteFileName})`);
+      declaration.value = declaration.value.replace(/url\(.+?\)/i, `url(~.sprites/${spriteFileName})`);
 
       const positionX = getPosition(x, imageWidth, width)
       const positionY = getPosition(y, imageHeight, height)

@@ -37,6 +37,6 @@
 .div4 {
   width: 48px;
   height: 32px;
-  background: url('./image4.png');
+  background: url('./image4.png?__sprite');
   background-repeat: no-repeat;
 }
